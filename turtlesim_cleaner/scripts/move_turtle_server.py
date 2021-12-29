@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from rospy_tutorial.srv import AngleDistance, AngleDistanceResponse
+from turtlesim_cleaner.srv import AngleDistance, AngleDistanceResponse
 import rospy
 from geometry_msgs.msg import Twist
 from math import radians

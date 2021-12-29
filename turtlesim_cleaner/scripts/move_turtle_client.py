@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 import rospy
-from rospy_tutorial.srv import AngleDistance
+from turtlesim_cleaner.srv import AngleDistance
 
 def move_turtle_client(angle, distance):
     rospy.wait_for_service('turtlesim_svc')
