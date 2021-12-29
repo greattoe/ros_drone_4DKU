@@ -8,8 +8,8 @@ def move_turtle_client(angle, distance):
 
     try:
         svc = rospy.ServiceProxy('turtlesim_svc', AngleDistance)
-        res = svc(x, y)
-        return res.result
+        res = svc(angle, distance)
+        return res.complete
         
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
@@ -19,8 +19,8 @@ def usage():
 
 if __name__ == "__main__":
     if len(sys.argv) == 3:
-        x = float(sys.argv[1])
-        y = float(sys.argv[2])
+        angle = float(sys.argv[1])
+        distance = float(sys.argv[2])
     else:
         print usage()
         sys.exit(1)
