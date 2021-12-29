@@ -16,7 +16,7 @@ class GetChar:
         # Support normal-terminal reset at exit
         atexit.register(self.set_normal_term)
         
-def set_normal_term(self):
+    def set_normal_term(self):
         termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.old_term)
         
     def getch(self):        # get 1 byte from stdin
