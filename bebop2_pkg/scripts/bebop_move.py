@@ -12,7 +12,7 @@ ANG_SPD = 0.50
 class Bebop2Move:
 
     def __init__(self):
-        rospy.Subscriber('/bb2_pose_odom', Pos_XYZ_th, self.get_pos_xyzth_cb)
+        rospy.Subscriber('/bebop_odom_pose', Pos_XYZ_th, self.get_pos_xyzth_cb)
         self.pub0 = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size = 1)
         self.pub1 = rospy.Publisher('/bebop/takeoff', Empty, queue_size = 1)
         self.pub2 = rospy.Publisher('/bebop/land',    Empty, queue_size = 1)

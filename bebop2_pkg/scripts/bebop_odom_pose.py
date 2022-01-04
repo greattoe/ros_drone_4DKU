@@ -9,9 +9,9 @@ from bebop2_pkg.msg import Pos_XYZ_th
 class OdomPose:
 
     def __init__(self):
-        rospy.init_node('bb2_pub_pose_odom', anonymous = True)
+        rospy.init_node('bebop_odom_pose', anonymous = True)
         rospy.Subscriber('/bebop/odom', Odometry, self.get_odom_cb )
-        self.pub = rospy.Publisher('/bb2_pose_odom', Pos_XYZ_th, queue_size = 1)
+        self.pub = rospy.Publisher('/bebop_odom_pose', Pos_XYZ_th, queue_size = 1)
         
         self.xyzth_now = Pos_XYZ_th()
         self.theta_prv = 0.0

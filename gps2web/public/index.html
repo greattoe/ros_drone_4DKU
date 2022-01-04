@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title> Realtime GPS Location of Bebop2 on Map </title>
+  </head>    
+  <body>
+    <!--map size -->
+    <div id="map" style="width:100%;height:640px;"></div>
+    <p>
+      Latitude:  <input id="long" type="text"> &nbsp;
+      Longitude: <input id="lati" type="text"> &nbsp;
+    </p>
+    <!-- kakao Map API APP KEY -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YourJavascriptAppKey&libraries=services"></script>
+    <script>
+      const mapContainer = document.getElementById('map'),
+            mapOption = {
+              center: new kakao.maps.LatLng(37.557953, 126.999108),
+              level: 1
+            };
+      // load map
+      const map = new kakao.maps.Map(mapContainer, mapOption);
+      map.setMapTypeId(kakao.maps.MapTypeId.HYBRID);
+      const imageSRC = "http://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+      const imageSize = new kakao.maps.Size(24, 35);
+      const markerImage = new kakao.maps.MarkerImage(imageSRC, imageSize);
+
+      // real-time mark bebop2 on map
+      function update_gps(lat, lon){  // update_gps
+        
+        if(lat) document.getElementById('lati').value = lat;
+        else; // if(lat == undefined) do nothing
+        
+        if(lon) document.getElementById('long').value = lon;
+        else; // if(lon == undefined) do nothing
+        
+        var drone_pos = new kakao.maps.LatLng(lat, lon);
+        var marker_drone = new kakao.maps.Marker({
+            position: drone_pos,
+            image : markerImage
+        });
+        marker_drone.setMap(map);
+        // every 1sec
+        setTimeout(function() {marker_drone.setMap(null)}, 1000);
+      } 
+      let timerId = setInterval(update_gps, 100);
+    </script>
+  </body>
+</html>
