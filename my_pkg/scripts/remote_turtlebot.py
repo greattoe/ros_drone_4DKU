@@ -10,8 +10,8 @@ MIN_LIN_SPD = -0.22
 MAX_ANG_SPD =  2.84
 MIN_ANG_SPD = -2.84
 
-LIN_STP = 0.1
-ANG_STP = 0.2
+LIN_STP = 0.01
+ANG_STP = 0.05
 
 rospy.init_node('remote_turtlebot')
 pub  = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
