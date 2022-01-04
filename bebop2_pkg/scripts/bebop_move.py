@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import rospy
 from geometry_msgs.msg import Twist
@@ -13,7 +12,7 @@ ANG_SPD = 0.50
 class Bebop2Move:
 
     def __init__(self):
-        rospy.Subscriber('/bebop_odom_pose', Pos_XYZ_th, self.get_pos_xyzth_cb)
+        rospy.Subscriber('/bb2_pose_odom', Pos_XYZ_th, self.get_pos_xyzth_cb)
         self.pub0 = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size = 1)
         self.pub1 = rospy.Publisher('/bebop/takeoff', Empty, queue_size = 1)
         self.pub2 = rospy.Publisher('/bebop/land',    Empty, queue_size = 1)
@@ -38,8 +37,7 @@ class Bebop2Move:
         
         
     def elapsed_dist(self):
-        return sqrt(pow((self.xyzth_now.x - self.xyzth_org.x), 2) + \
-pow((self.xyzth_now.y - self.xyzth_org.y), 2))
+        return sqrt(pow((self.xyzth_now.x - self.xyzth_org.x), 2) + pow((self.xyzth_now.y - self.xyzth_org.y), 2))
         
         
     def elapsed_angle(self):
@@ -127,12 +125,12 @@ pow((self.xyzth_now.y - self.xyzth_org.y), 2))
         
     
     def takeoff(self):
-        self.pub1.publish(self.empty_msg);  print "takeoff"
+        self.pub1.publish(self.empty_msg);  print "takeoff"#;    rospy.sleep(3.0)
         
    
     def landing(self):
-        self.pub2.publish(self.empty_msg);  print "landing"
+        self.pub2.publish(self.empty_msg);  print "landing";    rospy.sleep(3.0)
         
     
     def emergency(self):
-        self.pub3.publish(self.empty_msg);  print "emergency"
+        self.pub3.publish(self.empty_msg);  print "emergency";  rospy.sleep(3.0)

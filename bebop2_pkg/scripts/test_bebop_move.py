@@ -12,7 +12,7 @@ if __name__ == '__main__':
     try:
         bb2 = Bebop2Move()
         
-        # bb2.takeoff();  rospy.sleep(3.0)      
+        bb2.takeoff(); rospy.sleep(3.0)      
         
         dist_z = float(input("input distance to move to z in meter: "))
         bb2.move_z(dist_z, 0.1)
