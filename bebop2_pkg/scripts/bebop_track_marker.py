@@ -74,18 +74,17 @@ class MarkerPose:
                     
                     self.step1_target_found = True
                     
-                    #if self.step2_align_marker == False:
-                    
                     theta = self.get_ar_theta(msg)
                     
 					# make theta from -90 to 90
+                    
                     if   theta >  radians(270): 
                         self.ar_pose.theta = theta - 2 * pi            
                     elif theta < -radians(270):
                         self.ar_pose.theta = theta + 2 * pi
                     else:
                         self.ar_pose.theta = theta
-
+                    
                     self.ar_pose.x = msg.pose.pose.position.z
                     self.ar_pose.y = msg.pose.pose.position.x
                     
@@ -120,11 +119,12 @@ class MarkerPose:
         theta = euler[1]
         
         # make theta from 0 to 360(deg)
+        
         if theta < 0:
             theta = theta + radians(360)
         if theta > 2 * pi:
             theta = theta - radians(360)
-
+        
         return theta
     
     
@@ -134,7 +134,8 @@ class MarkerPose:
         
     def get_ref(self):
         self.theta_ref = self.ar_pose.theta
-        self.dist_ref  = self.ar_tag.pose.pose.position.z * sin(self.theta_ref)
+        self.dist_ref  = self.ar_pose.x * sin(self.theta_ref)
+        print "theta = %s, dist = %s" %(self.theta_ref, self.dist_ref)
     
         
     def print_ar_pose(self):
@@ -171,15 +172,20 @@ if __name__ == '__main__':
         
         mp.get_ref()
         
-        if mp.theta_ref >= 0:
-            bb2.rotate(-mp.theta_ref * 0.75, 0.05)
-        else:
-            bb2.rotate( mp.theta_ref * 0.75, 0.05)
         
+        
+        bb2.rotate(-mp.theta_ref * 0.75, 0.05)
+        
+        bb2.move_y( mp.dist_ref * 1.25, 0.025)
+           
+        '''
         if mp.theta_ref >= 0:
             bb2.move_y( mp.dist_ref * 1.25, 0.025)
+            print(mp.dist_ref)
         else:
             bb2.move_y(-mp.dist_ref * 1.25, 0.025)
+            print(mp.dist_ref)
+        '''
         
         bb2.move_x(0.4, 0.05)
         
