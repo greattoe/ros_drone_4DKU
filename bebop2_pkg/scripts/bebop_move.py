@@ -7,7 +7,7 @@ from math import radians, degrees, pi, sqrt
 from bebop2_pkg.msg import Pos_XYZ_th
 
 LIN_SPD = 0.125
-ANG_SPD = 0.50
+ANG_SPD = 0.125
 
 class Bebop2Move:
 
