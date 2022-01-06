@@ -8,7 +8,8 @@ from bebop_msgs.msg import Ardrone3PilotingStateAttitudeChanged, \
                            Ardrone3PilotingStatePositionChanged, \
                            Ardrone3PilotingStateAltitudeChanged, \
                            Ardrone3GPSStateNumberOfSatelliteChanged
-from scipy import sqrt, cos, sin, arctan2, pi
+#from scipy import sqrt, cos, sin, arctan2, pi
+from math import sqrt, cos, sin, pi, atan2
 from math import degrees, radians
 
 USE_SPHINX = bool(int(sys.argv[1]))
@@ -116,7 +117,7 @@ class Move2GPS:
         y = sin(Lon2-Lon1) * cos(Lat2) 
         x = cos(Lat1) * sin(Lat2) - sin(Lat1) * cos(Lat2) * cos(Lon2-Lon1) 
         
-        return arctan2(y, x)
+        return atan2(y, x)
     
         
     def get_gps_now(self):

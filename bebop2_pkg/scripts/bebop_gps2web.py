@@ -14,7 +14,7 @@ USE_SPHINX = bool(int(sys.argv[1]))
 '''
 OFFSET_LAT = -11.320947
 OFFSET_LON = 124.631325
-drv = webdriver.Chrome(executable_path="/home/YourUserName/chromedriver")
+drv = webdriver.Chrome(executable_path="/home/gnd0/chromedriver")
 
 def get_gps_cb(msg):    
     if USE_SPHINX is True:

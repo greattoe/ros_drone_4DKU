@@ -1,48 +1,48 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import sys
-import rospy
-from turtlesim.msg import Pose
-from math import degrees, radians, sin, cos, pi
+import rospy, sys
 from ar_track_alvar_msgs.msg import AlvarMarker, AlvarMarkers
-from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Twist
-from bebop_msgs.msg import Ardrone3PilotingStateAltitudeChanged
-from bebop_move import Bebop2Move
+from math import degrees, radians, sin, cos, pi
+from tf.transformations import euler_from_quaternion
+from tb3_move import MoveTB3
 
 TARGET_ID = int(sys.argv[1]) # argv[1] = id of target marker
 
-LIN_SPD   = 0.125
-ANG_SPD   = 0.125
+# Turtlebot3 Specification
+MAX_LIN_SPEED =  0.22
+MAX_ANG_SPEED =  2.84
 
-TARGET_H  = 1.4
+# make default speed of linear & angular
+LIN_SPD = MAX_LIN_SPEED * 0.125
+ANG_SPD = MAX_ANG_SPEED * 0.125
 
 class MarkerPose:
 
     def __init__(self):    
         rospy.init_node('recog_ar_marker')        
         rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.get_ar_pose) 
-        rospy.Subscriber('/bebop/states/ardrone3/PilotingState/AltitudeChanged',\
-                         Ardrone3PilotingStateAltitudeChanged,
-                         self.get_alti 
-                        )
-        self.pub = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=10)
+        self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.tw  = Twist()
         
+        self.dist  = 0.0
         self.theta = 0.0
-        self.pos_z = 0.0
+        
         self.pos_x = 0.0
         
-        self.ref_th = 0.0
-        self.ref_d  = 0.0
+        self.dist_ref  = 0.0    # distance for move to front of marker
+        self.theta_ref = 0.0    # angle for calcurate dist_ref
         
-        self.alti   = 0.0
+        self.target_found = False
+        '''
+        self.zone = 0.0
         
         self.ar_tag = AlvarMarker()
         
-        self.target_found  = False
-        
-        
+        self.step2_align_marker  = False
+        self.step3_get_ref_value = False
+        '''
         """   
                                                  ////////////| ar_marker |////////////
                 y                      z         --------+---------+---------+--------
@@ -66,18 +66,12 @@ class MarkerPose:
             
             for msg in msg.markers:
                 
-                if msg.id == TARGET_ID: # found target marker
-                
-                    self.ar_tag = msg
-                    
-                    #print("%s" %(self.ar_tag.pose.pose.position.x))
+                if msg.id == TARGET_ID: # found target marker                    
                     
                     self.target_found = True
+                                        
+                    theta = self.get_theta(msg)
                     
-                    self.pos_x = msg.pose.pose.position.x
-                    self.pos_z = msg.pose.pose.position.z
-                    
-                    theta = self.get_ar_theta(msg)                    
 					# make theta from -90 to 90                    
                     if   theta >  radians(270): 
                         self.theta = theta - 2 * pi            
@@ -86,8 +80,11 @@ class MarkerPose:
                     else:
                         self.theta = theta
                     
+                    self.dist  = msg.pose.pose.position.z
+                    self.pos_x = msg.pose.pose.position.x
+                    
                 
-    def get_ar_theta(self, msg): 
+    def get_theta(self, msg): 
               
         """
         orientation x,y,z,w ----+
@@ -108,98 +105,39 @@ class MarkerPose:
         q = (msg.pose.pose.orientation.x, msg.pose.pose.orientation.y,
              msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
              
-        euler = euler_from_quaternion(q)
-        theta = euler[1]
+        theta = euler_from_quaternion(q)[1]
         
-        # make theta from 0 to 360(deg)
-        
+        # make theta from 0 to 360(deg)        
         if theta < 0:
             theta = theta + radians(360)
         if theta > 2 * pi:
             theta = theta - radians(360)
         
         return theta
-    
-    
-    def get_alti(self, msg):
-        self.alti = msg.altitude
-        
+                
         
     def get_ref(self):
-        self.ref_th = self.theta
-        self.ref_d  = self.pos_z * sin(self.ref_th)
-        print "theta = %s, dist = %s" %(self.ref_th, self.ref_d)
-        return (self.ref_th, self.ref_d)
+        self.theta_ref = self.theta
+        self.dist_ref  = self.pos_x * sin(self.theta_ref)
+        print "theta = %s, dist = %s" %(self.theta_ref, self.dist_ref)
           
 
 if __name__ == '__main__':
     try:        
-        mp  = MarkerPose()
-        bb2 = Bebop2Move()
+        mp = MarkerPose()
+        mt = MoveTB3()
         
-        print "--- step1. up to target height"
-        
-        mp.tw.linear.z = LIN_SPD
-        
-        while mp.alti < TARGET_H:
-            mp.pub.publish(mp.tw)
-            
-        print "    step1 ends"
-        
-        mp.tw.linear.z = 0.0
-        mp.pub.publish(mp.tw)
-        
-        print "--- step2. searching target marker"
+        print "--- step1. Searching Target Marker"
         
         mp.tw.angular.z = ANG_SPD
         
         while mp.target_found is False:
             mp.pub.publish(mp.tw)
-            
-        print "    step2 ends"
         
         mp.tw.angular.z = 0.0
         mp.pub.publish(mp.tw)
         
-        print "--- step3. align to marker"
-        
-        mp.tw.angular.z = ANG_SPD
-        while mp.pos_x < -0.25 or mp.pos_x > 0.25:
-            mp.pub.publish(mp.tw)
-            
-        print "    step3 ends"
-        
-        mp.tw.angular.z = 0.0
-        mp.pub.publish(mp.tw)
-        
-        (theta, dist) = mp.get_ref()
-        
-        print "--- step4. rotate to right angle"
-        
-        bb2.rotate(-theta * 0.9, 0.05)
-            
-        print "    step4 ends"
-        
-        print "--- step5. move to front of marker"
-        
-        bb2.move_y( dist * 0.9, 0.05)
-            
-        print "    step5 ends"
-           
-        '''
-        if mp.theta_ref >= 0:
-            bb2.move_y( mp.dist_ref * 1.25, 0.025)
-            print(mp.dist_ref)
-        else:
-            bb2.move_y(-mp.dist_ref * 1.25, 0.025)
-            print(mp.dist_ref)
-        '''
-        
-        #bb2.move_x(0.4, 0.05)
-        
-        bb2.landing()
-            
-        print "mission complete!!!"
+        print "    Target marker is found!"
         
         rospy.spin()
         
