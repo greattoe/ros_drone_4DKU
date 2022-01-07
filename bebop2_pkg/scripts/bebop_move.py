@@ -125,7 +125,7 @@ class Bebop2Move:
         
     
     def takeoff(self):
-        self.pub1.publish(self.empty_msg);  print "takeoff"#;    rospy.sleep(3.0)
+        self.pub1.publish(self.empty_msg);  print "takeoff";    rospy.sleep(3.0)
         
    
     def landing(self):

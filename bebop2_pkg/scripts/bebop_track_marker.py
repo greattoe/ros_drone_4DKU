@@ -133,9 +133,11 @@ class MarkerPose:
           
 
 if __name__ == '__main__':
-    try:        
+    try:
         mp  = MarkerPose()
         bb2 = Bebop2Move()
+        
+        bb2.takeoff()
         
         print "--- step1. up to target height"
         '''
@@ -160,11 +162,29 @@ if __name__ == '__main__':
         
         mp.tw.angular.z = 0.0
         mp.pub.publish(mp.tw)
+        rospy.sleep(0.5)
         
         print "--- step3. align to marker"
         
+        '''
         mp.tw.angular.z = ANG_SPD
         while mp.pos_x < -0.25 or mp.pos_x > 0.25:
+            mp.pub.publish(mp.tw)
+        '''
+        margin = 0.25
+        
+        if mp.pos_x < -margin or mp.pos_x > margin:
+        
+            if mp.pos_x < -margin:
+                mp.tw.angular.z =  ANG_SPD
+                while mp.pos_x < -margin:   # rotate +val
+                    mp.pub.publish(mp.tw)
+            else:
+                mp.tw.angular.z = -ANG_SPD
+                while mp.pos_x >  margin:   # rotate +val
+                    mp.pub.publish(mp.tw)
+            
+            mp.tw.angular.z = 0.0
             mp.pub.publish(mp.tw)
             
         print "    step3 ends"
@@ -176,33 +196,69 @@ if __name__ == '__main__':
         
         print "--- step4. rotate to right angle"
         
-        bb2.rotate(-theta * 1.0, 0.05)
+        bb2.rotate(-theta * 0.925, 0.05)
             
         print "    step4 ends"
         
         print "--- step5. move to front of marker"
+        print(dist)
         
-        bb2.move_y( dist * 1.0, 0.05)
+        bb2.move_y( dist * 1.1, 0.05)
             
         print "    step5 ends"
         
-        mp.tw.angular.z = ANG_SPD
-        while mp.pos_x < -0.25 or mp.pos_x > 0.25:
+        print "--- step6. align to marker"       
+        
+        margin = 0.125
+        
+        if mp.pos_x < -margin or mp.pos_x > margin:
+        
+            if mp.pos_x < -margin:
+                mp.tw.angular.z =  ANG_SPD
+                while mp.pos_x < -margin:   # rotate +val
+                    mp.pub.publish(mp.tw)
+            else:
+                mp.tw.angular.z = -ANG_SPD
+                while mp.pos_x >  margin:   # rotate +val
+                    mp.pub.publish(mp.tw)
+            
+            mp.tw.angular.z = 0.0;  
             mp.pub.publish(mp.tw)
+            
+        print "    step6 ends"
         
         mp.tw.angular.z = 0.0
         mp.pub.publish(mp.tw)
-           
-        '''
-        if mp.theta_ref >= 0:
-            bb2.move_y( mp.dist_ref * 1.25, 0.025)
-            print(mp.dist_ref)
-        else:
-            bb2.move_y(-mp.dist_ref * 1.25, 0.025)
-            print(mp.dist_ref)
-        '''
         
-        #bb2.move_x(0.4, 0.05)
+        print "--- step7. down to 0.7(m)"  
+        
+        mp.tw.linear.z = -LIN_SPD
+        while mp.alti > 0.75:
+            mp.pub.publish(mp.tw)
+        
+        mp.tw.linear.z = 0.0
+        mp.pub.publish(mp.tw)
+        
+        print "    step7 ends"
+        
+        print "--- step8. forward to marker"  
+        
+        dist = mp.pos_z - 0.75        
+        bb2.move_x(dist * 1.0, 0.05)
+                
+        print "    step8 ends"
+        
+        print "--- step9. up to 1.75(m)"
+        
+        bb2.move_z( 1.0, 0.05)
+        
+        print "    step9 ends"
+        
+        print "--- step10. backward 1.5(m)"
+        
+        bb2.move_x(-1.5, 0.05)
+        
+        print "    step10 ends"        
         
         bb2.landing()
             
