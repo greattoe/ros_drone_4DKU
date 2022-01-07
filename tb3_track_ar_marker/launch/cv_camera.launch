@@ -1,0 +1,12 @@
+<launch>
+	<arg name="id"     default="4"   />
+	<arg name="width"  default="320" />
+	<arg name="height" default="240" />
+	<arg name="rate"   default="10.0"/>	
+	<node name="cv_cam" pkg="cv_camera" type="cv_camera_node" output="screen">	
+		<param name="/device_id"    type="int"    value="$(arg id)"    />
+		<param name="/image_width"  type="int"    value="$(arg width)" />
+		<param name="/image_height" type="int"    value="$(arg height)"/>
+		<param name="/rate"         type="double" value="$(arg rate)"  />		
+	</node>	
+</launch>

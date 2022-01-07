@@ -12,7 +12,7 @@ from bebop_move import Bebop2Move
 
 TARGET_ID = int(sys.argv[1]) # argv[1] = id of target marker
 
-LIN_SPD   = 0.125
+LIN_SPD   = 0.1
 ANG_SPD   = 0.125
 
 TARGET_H  = 1.4
@@ -138,12 +138,12 @@ if __name__ == '__main__':
         bb2 = Bebop2Move()
         
         print "--- step1. up to target height"
-        
+        '''
         mp.tw.linear.z = LIN_SPD
         
         while mp.alti < TARGET_H:
             mp.pub.publish(mp.tw)
-            
+        '''    
         print "    step1 ends"
         
         mp.tw.linear.z = 0.0
@@ -176,15 +176,22 @@ if __name__ == '__main__':
         
         print "--- step4. rotate to right angle"
         
-        bb2.rotate(-theta * 0.9, 0.05)
+        bb2.rotate(-theta * 1.0, 0.05)
             
         print "    step4 ends"
         
         print "--- step5. move to front of marker"
         
-        bb2.move_y( dist * 0.9, 0.05)
+        bb2.move_y( dist * 1.0, 0.05)
             
         print "    step5 ends"
+        
+        mp.tw.angular.z = ANG_SPD
+        while mp.pos_x < -0.25 or mp.pos_x > 0.25:
+            mp.pub.publish(mp.tw)
+        
+        mp.tw.angular.z = 0.0
+        mp.pub.publish(mp.tw)
            
         '''
         if mp.theta_ref >= 0:
