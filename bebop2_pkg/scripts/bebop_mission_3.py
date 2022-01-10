@@ -10,18 +10,22 @@ from bebop_msgs.msg import Ardrone3PilotingStateAttitudeChanged, \
 #from scipy import sqrt, cos, sin, arctan2, pi
 from math import sqrt, cos, sin, pi, atan2
 from math import degrees, radians
+from bebop_move import Bebop2Move
 
-USE_SPHINX = False#bool(int(sys.argv[1]))
+USE_SPHINX = bool(int(sys.argv[1]))
 '''
-    GPS for center of map  (  37.557953,  126.999105 )
-    Parot-Sphinx start GPS (  48.878900,    2.367780 )
-    diffrence              ( -11.310947, +124.631325 )
+    GPS for center of map  (  37.4089445,  126.691189833 )  인천 인력개발원
+    Parot-Sphinx start GPS (  48.8789000,    2.367780000 )
+    diffrence              ( -11.4699555, +124.323409833 )
 '''
-OFFSET_LAT = -11.320947
-OFFSET_LON = 124.631325
+OFFSET_LAT = -11.469955500
+OFFSET_LON = 124.323409833
+
 LIN_SPD    =   0.55
 ANG_SPD    =   0.25 * pi
-FLIGHT_ALT =  11.5
+
+FLIGHT_ALT =   4.0
+
 DEG_PER_M  =   0.00000899320363721
 '''
                                p2 (lat2,lon2)
@@ -53,23 +57,23 @@ class Move2GPS:
                          Ardrone3PilotingStateAttitudeChanged,
                          self.cb_get_alti)
         '''
-        self.atti_now    = self.atti_tmp  =   0.0        
+        self.atti_now    = self.atti_tmp = 0.0        
         self.use_tmp     = False        
-        self.lati_now    = self.long_now  = 500.0
-        self.alti_gps    = 500.0#= self.alti_bar  =   0.0
+        self.lati_now    = self.long_now = self.alti_gps = 500.0
+        self.alti_bar    = 0.0
         self.bearing_now = self.bearing_ref = 0.0
         
         
-        self.margin_angle  = radians(5.0)
+        self.margin_angle  = radians(2.5)
         self.margin_radius = DEG_PER_M * 1.5
-        self.margin_alt    = 0.25
+        self.margin_alt    = 0.125
         
         rospy.sleep(3.0)
 
-    '''
+    
     def cb_get_alti(self, msg):
         self.alti_bar = msg.altitude
-    '''
+    
 
     def cb_get_gps(self, msg):
         
@@ -196,8 +200,8 @@ class Move2GPS:
         
         
     def check_alt(self):
-        if self.alti_gps > FLIGHT_ALT - self.margin_alt and \
-           self.alti_gps < FLIGHT_ALT + self.margin_alt:
+        if self.alti_bar > FLIGHT_ALT - self.margin_alt and \
+           self.alti_bar < FLIGHT_ALT + self.margin_alt:
             return True
         else:
             return False
@@ -244,13 +248,13 @@ class Move2GPS:
                 self.rotate(lat2, lon2, radians(45))
                 
         tw.linear.x = 0;  pub.publish(tw); rospy.sleep(2.0)
-        print "arrived to target gps position(%s, %s) %s(m) above sea level!!!" \
-              %(self.lati_now, self.long_now, self.alti_gps)
+        print "arrived at HOME location(%s, %s)" %(self.lati_now, self.long_now)
         
         land.publish(empty)
         rospy.sleep(5)
-        print "### landing finished ###"
-        return
+        print "landing finished"
+        print "#### all missions are finished!!! ####"
+        sys.exit(1)
               
             
 if __name__ == '__main__':
@@ -260,20 +264,20 @@ if __name__ == '__main__':
     cmd  = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size = 1)
     
     m2g  = Move2GPS()
+    bb2  = Bebop2Move()
     tw   = Twist()
     off  = empty = Empty()
     
     while m2g.lati_now == 500.0 or m2g.long_now == 500.0 or m2g.alti_gps == 500.0:
-        pass    
+        pass
+    
+    while rospy.get_param('mission_2_finished') is False:
+        pass
     
     print "--- 1-1. valid gps info recieved!!!"
     
-    tw.linear.z = LIN_SPD
-    
-    while m2g.alti_gps < FLIGHT_ALT:
-        cmd.publish(tw)
-    
-    rospy.sleep(5.0)
+    height = FLIGHT_ALT - m2g.alti_bar
+    bb2.move_z(height, 0.05)
     
     print "--- 1-2. reached flight altitude!"
     
@@ -281,8 +285,8 @@ if __name__ == '__main__':
     
     try:
         while not rospy.is_shutdown():
-            p2_lati_deg =  37.4089445   #float(input("input target latitude : "))
-            p2_long_deg = 126.691189833 #float(input("input target longitude: "))
+            p2_lati_deg = rospy.get_param('home_lati') #float(input("input target latitude : "))
+            p2_long_deg = rospy.get_param('home_long') #float(input("input target longitude: "))
             
             p1_lati_deg = m2g.lati_now
             p1_long_deg = m2g.long_now

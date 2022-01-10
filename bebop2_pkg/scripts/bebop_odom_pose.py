@@ -5,13 +5,18 @@ from nav_msgs.msg import Odometry
 from math import radians, degrees, pi, sqrt
 from tf.transformations import euler_from_quaternion
 from bebop2_pkg.msg import Pos_XYZ_th
+from serial import Serial
+from std_msgs.msg import Bool
 
 class OdomPose:
 
     def __init__(self):
         rospy.init_node('bebop_odom_pose', anonymous = True)
         rospy.Subscriber('/bebop/odom', Odometry, self.get_odom_cb )
+        rospy.Subscriber('/dropper', Bool, self.dropper_ctrl)
         self.pub = rospy.Publisher('/bebop_odom_pose', Pos_XYZ_th, queue_size = 1)
+        
+        # self.sp = Serial('/dev/ttyUSB0', 9600, timeout=1)
         
         self.xyzth_now = Pos_XYZ_th()
         self.theta_prv = 0.0
@@ -51,7 +56,11 @@ class OdomPose:
         if theta > pi * 2:
             theta = theta - pi * 2
 
-        return theta        
+        return theta
+
+    def dropper_ctrl(self, msg):
+        if msg.data is True:
+            self.sp.write('1');  print("release!")
         
     def print_xyzth(self, msg):
         print "x = %s, y = %s, z = %s, th = %s" %(msg.x, msg.y, msg.z, degrees(msg.th))
