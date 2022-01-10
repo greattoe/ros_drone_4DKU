@@ -227,13 +227,20 @@ if __name__ == '__main__':
             
         print "    step7 ends"
         
-        print "--- step8. release load"
+        print "--- step8. forward to marker"  
+        
+        dist = mp.pos_z - 0.75
+        bb2.move_x(dist * 1.0, 0.05)        
+        
+        print "    step8 ends"
+        
+        print "--- step9. release load"
         
         mp.drop.publish(mp.drop_msg)
         
-        print "    step8 ends"
+        print "    step9 ends"
             
-        print "mission complete!!!"
+        print "#### mission complete!!! ####"
         
         rospy.spin()
         

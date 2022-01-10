@@ -2,10 +2,10 @@
 
 import sys
 import rospy
-import serial
+from serial import Serial
 from std_msgs.msg import Bool
 
-sp = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+sp = Serial('/dev/ttyUSB0', 9600, timeout=1)
 
 class Drop:
 
