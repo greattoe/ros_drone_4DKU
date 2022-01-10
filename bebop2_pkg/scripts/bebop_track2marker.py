@@ -7,6 +7,7 @@ from math import degrees, radians, sin, cos, pi
 from ar_track_alvar_msgs.msg import AlvarMarker, AlvarMarkers
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Bool
 from bebop_msgs.msg import Ardrone3PilotingStateAltitudeChanged
 from bebop_move import Bebop2Move
 
@@ -15,7 +16,7 @@ TARGET_ID = int(sys.argv[1]) # argv[1] = id of target marker
 LIN_SPD   = 0.1
 ANG_SPD   = 0.125
 
-TARGET_H  = 1.4
+TARGET_H  = 1.5
 
 class MarkerPose:
 
@@ -26,8 +27,9 @@ class MarkerPose:
                          Ardrone3PilotingStateAltitudeChanged,
                          self.get_alti 
                         )
-        self.pub = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=10)
-        self.tw  = Twist()
+        self.pub  = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=10)
+        self.drop = rospy.Publisher('/dropper', Bool, queue_size=1)
+        self.tw   = Twist()
         
         self.theta = 0.0
         self.pos_z = 0.0
@@ -37,6 +39,8 @@ class MarkerPose:
         self.ref_d  = 0.0
         
         self.alti   = 0.0
+        
+        self.drop_msg = True
         
         self.ar_tag = AlvarMarker()
         
@@ -137,40 +141,36 @@ if __name__ == '__main__':
         mp  = MarkerPose()
         bb2 = Bebop2Move()
         
-        bb2.takeoff()
+        print "--- step1. descend to target height(1.5m)"
         
-        print "--- step1. up to target height"
-        '''
-        mp.tw.linear.z = LIN_SPD
+        mp.tw.linear.z = -LIN_SPD
         
-        while mp.alti < TARGET_H:
+        while mp.alti > TARGET_H:
             mp.pub.publish(mp.tw)
-        '''    
-        print "    step1 ends"
         
         mp.tw.linear.z = 0.0
         mp.pub.publish(mp.tw)
-        
+            
+        print "    step1 ends"
+        rospy.sleep(0.5)
         print "--- step2. searching target marker"
         
         mp.tw.angular.z = ANG_SPD
         
         while mp.target_found is False:
             mp.pub.publish(mp.tw)
-            
-        print "    step2 ends"
         
         mp.tw.angular.z = 0.0
         mp.pub.publish(mp.tw)
-        rospy.sleep(0.5)
-        
+            
+        print "    step2 ends"
+        rospy.sleep(0.5)        
         print "--- step3. align to marker"
         
-        '''
         mp.tw.angular.z = ANG_SPD
         while mp.pos_x < -0.25 or mp.pos_x > 0.25:
             mp.pub.publish(mp.tw)
-        '''
+        
         margin = 0.25
         
         if mp.pos_x < -margin or mp.pos_x > margin:
@@ -188,26 +188,26 @@ if __name__ == '__main__':
             mp.pub.publish(mp.tw)
             
         print "    step3 ends"
-        
-        mp.tw.angular.z = 0.0
-        mp.pub.publish(mp.tw)
+        rospy.sleep(0.5)
+        print "--- step4. calcurate angle & distance"
         
         (theta, dist) = mp.get_ref()
-        
-        print "--- step4. rotate to right angle"
+            
+        print "    step4 ends"
+        rospy.sleep(0.5)
+        print "--- step5. rotate to right angle"
         
         bb2.rotate(-theta * 0.925, 0.05)
             
-        print "    step4 ends"
-        
-        print "--- step5. move to front of marker"
-        print(dist)
-        
+        print "    step5 ends"
+        rospy.sleep(0.5)
+        print "--- step6. move to front of marker"
+                
         bb2.move_y( dist * 1.1, 0.05)
             
-        print "    step5 ends"
+        print "    step6 ends"
         
-        print "--- step6. align to marker"       
+        print "--- step7. align to marker"       
         
         margin = 0.125
         
@@ -225,43 +225,13 @@ if __name__ == '__main__':
             mp.tw.angular.z = 0.0;  
             mp.pub.publish(mp.tw)
             
-        print "    step6 ends"
-        
-        mp.tw.angular.z = 0.0
-        mp.pub.publish(mp.tw)
-        
-        dist = mp.pos_z - 0.75
-        
-        print "--- step7. down to 0.75(m)"  
-        
-        mp.tw.linear.z = -LIN_SPD
-        while mp.alti > 0.75:
-            mp.pub.publish(mp.tw)
-        
-        mp.tw.linear.z = 0.0
-        mp.pub.publish(mp.tw)
-        
         print "    step7 ends"
         
-        print "--- step8. forward to marker"  
+        print "--- step8. release load"
         
-        bb2.move_x(dist * 1.0, 0.05)
-                
+        mp.drop.publish(mp.drop_msg)
+        
         print "    step8 ends"
-        
-        print "--- step9. up to 1.75(m)"
-        
-        bb2.move_z( 1.0, 0.05)
-        
-        print "    step9 ends"
-        
-        print "--- step10. backward 1.5(m)"
-        
-        bb2.move_x(-1.5, 0.05)
-        
-        print "    step10 ends"        
-        
-        bb2.landing()
             
         print "mission complete!!!"
         
