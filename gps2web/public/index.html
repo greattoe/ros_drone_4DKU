@@ -6,7 +6,7 @@
   </head>    
   <body>
     <!--map size -->
-    <div id="map" style="width:100%;height:640px;"></div>
+    <div id="map" style="width:100%;height:720px;"></div>
     <p>
       Latitude:  <input id="long" type="text"> &nbsp;
       Longitude: <input id="lati" type="text"> &nbsp;
@@ -16,7 +16,8 @@
     <script>
       const mapContainer = document.getElementById('map'),
             mapOption = {
-              center: new kakao.maps.LatLng(37.557953, 126.999108),
+              //center: new kakao.maps.LatLng(37.557953, 126.999108), // DKU Central Library
+              center: new kakao.maps.LatLng(37.409158567592925, 126.69131856529127), // Incheon HRD
               level: 1
             };
       // load map

@@ -16,7 +16,7 @@ class OdomPose:
         rospy.Subscriber('/dropper', Bool, self.dropper_ctrl)
         self.pub = rospy.Publisher('/bebop_odom_pose', Pos_XYZ_th, queue_size = 1)
         
-        # self.sp = Serial('/dev/ttyUSB0', 9600, timeout=1)
+        #self.sp = Serial('/dev/ttyUSB0', 9600, timeout=1)
         
         self.xyzth_now = Pos_XYZ_th()
         self.theta_prv = 0.0
